@@ -21,6 +21,13 @@ directories:
 files:
   - dist/**/*
   - package.json
+  - resources/**/*
+
+extraResources:
+  - from: resources/bin
+    to: bin
+    filter:
+      - "**/*"
 
 win:
   requestedExecutionLevel: asInvoker

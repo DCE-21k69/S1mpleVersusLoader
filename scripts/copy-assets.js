@@ -13,3 +13,13 @@ for (const file of ["index.html", "style.css"]) {
     console.log(`[copy-assets] Copiado ${file} -> dist/src/renderer/`);
   }
 }
+
+// Asegurar permisos de ejecutable para los binarios y scripts en resources/bin
+for (const binPath of ["resources/bin/linux/vpk", "resources/bin/vpk-cli.cjs"]) {
+  const full = path.resolve(binPath);
+  if (fs.existsSync(full)) {
+    try {
+      fs.chmodSync(full, 0o755);
+    } catch {}
+  }
+}
