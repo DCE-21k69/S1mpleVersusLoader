@@ -107,6 +107,7 @@ async function bootstrap(): Promise<void> {
     vscriptDetector: outcome.pathDependent.vscriptDetector,
     localStore: base.localStore,
     mergeOrchestrator: outcome.pathDependent.mergeOrchestrator,
+    processGuard: base.processGuard,
     getResumeState,
   });
 

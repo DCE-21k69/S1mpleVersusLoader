@@ -30,6 +30,10 @@ const api: L4d2Api = {
     >,
   removeAddon: (addonId) =>
     ipcRenderer.invoke(IPC_CHANNELS.removeAddon, addonId) as Promise<OperationResult>,
+  restoreVanilla: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.restoreVanilla) as Promise<OperationResult>,
+  isGameRunning: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.isGameRunning) as Promise<boolean>,
   getResumeState: () =>
     ipcRenderer.invoke(IPC_CHANNELS.getResumeState) as Promise<ResumeState | null>,
   onProgress: (listener) => {

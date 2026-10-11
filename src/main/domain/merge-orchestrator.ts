@@ -283,6 +283,58 @@ export class MergeOrchestrator {
   }
 
   /**
+   * Restaura Left 4 Dead 2 a su estado 100% original (Vanilla):
+   * 1. Verifica que el juego esté cerrado.
+   * 2. Quita la referencia modsvs de gameinfo.txt.
+   * 3. Elimina la carpeta modsvs.
+   * 4. Limpia el manifest guardado.
+   */
+  async restoreVanilla(): Promise<OperationResult> {
+    this.#emit("guard");
+    if (await this.#processGuard.isGameRunning()) {
+      return {
+        status: "failure",
+        error: "El juego (left4dead2.exe) está en ejecución. Cerralo antes de restaurar a Vanilla.",
+      };
+    }
+
+    this.#emit("elevation");
+    const proactive = await this.#elevation.ensureCanWrite(
+      this.#paths.gameRoot,
+      [],
+      "applyActiveSet",
+    );
+    if (proactive.kind === "elevated-handoff") {
+      return { status: "elevating" };
+    }
+    if (proactive.kind === "denied") {
+      return {
+        status: "failure",
+        error: `Se canceló la solicitud de permisos de administrador (UAC): ${proactive.reason}`,
+      };
+    }
+
+    this.#emit("gameinfo");
+    await this.#writeStep([], "applyActiveSet", () =>
+      this.#gameInfo.removeModsvs(this.#paths.gameInfoFile),
+    );
+
+    this.#emit("install");
+    await this.#writeStep([], "applyActiveSet", () =>
+      this.#fs.removeDir(this.#paths.modsvsFolder),
+    );
+
+    this.#emit("saveManifest");
+    this.#store.saveManifest([]);
+
+    this.#emit("done");
+    return {
+      status: "success",
+      installedManifest: [],
+    };
+  }
+
+  /**
    * Resume de la instancia elevada (Tarea 18.2). Lee la sesión pendiente del
    * LocalStore y materializa SALTEANDO la elevación proactiva (esta instancia ya
    * está elevada por construcción). Limpia la sesión al terminar.
@@ -453,6 +505,16 @@ export class MergeOrchestrator {
         this.#fs.copyFile(mergedVpkPath, installTarget),
       );
       if (installResult.kind === "outcome") return installResult.result;
+
+      // Ocultar la carpeta modsvs en Windows (+h) para mantener el juego limpio
+      if (process.platform === "win32") {
+        try {
+          const { spawnSync } = await import("node:child_process");
+          spawnSync("attrib", ["+h", this.#paths.modsvsFolder], { windowsHide: true });
+        } catch {
+          // best-effort
+        }
+      }
 
       // Paso 7 — GameInfo (escritura en Game_Root -> reactivo). Un GameInfoEditError
       // (SearchPaths ausente/malformado) NO es de permisos: handleWriteFailure lo

@@ -1,9 +1,9 @@
 {
-  "name": "l4d2-versus-addon-manager",
-  "version": "0.1.0",
-  "description": "Gestor de addons de la Steam Workshop para el modo Versus de Left 4 Dead 2 (Electron + TypeScript).",
+  "name": "s1mple-versus-loader",
+  "version": "1.0.0",
+  "description": "S1mple Versus Loader — Gestor ultra-simple de mods para Left 4 Dead 2 Versus. Hecho por DCE Studios For EITO Comunity.",
   "private": true,
-  "author": "L4D2 Versus Addon Manager contributors",
+  "author": "DCE Studios For EITO Comunity",
   "license": "MIT",
   "main": "dist/src/main/main.js",
   "type": "module",

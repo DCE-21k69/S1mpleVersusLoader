@@ -19,6 +19,7 @@ import type {
   MergeOrchestrator,
   MergeProgressListener,
   PathDetector,
+  ProcessGuard,
   ScannedAddon,
   VScriptClassification,
   VScriptDetector,
@@ -32,6 +33,7 @@ export interface IpcHandlersDeps {
   localStore: LocalStore;
   /** Instancia YA construida, con `onProgress` ya cableado por la 20.4. */
   mergeOrchestrator: MergeOrchestrator;
+  processGuard?: ProcessGuard;
   /**
    * Accesor al estado de resume bufferizado (Decisión D2a-i). El buffer y su
    * ciclo de vida son responsabilidad del composition root; acá solo se lee.
@@ -161,6 +163,14 @@ export function registerIpcHandlers(
 
   ipcMain.handle(IPC_CHANNELS.removeAddon, async (_event, addonId: string) =>
     guardedWrite(() => deps.mergeOrchestrator.removeAddon(addonId)),
+  );
+
+  ipcMain.handle(IPC_CHANNELS.restoreVanilla, async () =>
+    guardedWrite(() => deps.mergeOrchestrator.restoreVanilla()),
+  );
+
+  ipcMain.handle(IPC_CHANNELS.isGameRunning, async () =>
+    deps.processGuard ? deps.processGuard.isGameRunning() : false,
   );
 
   ipcMain.handle(IPC_CHANNELS.getResumeState, () => deps.getResumeState());

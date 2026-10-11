@@ -502,6 +502,41 @@ export function ensureModsvsFirstInContent(content: string): GameInfoEditOutcome
 }
 
 /**
+ * Remueve todas las entradas Game modsvs del contenido del gameinfo.txt para dejarlo Vanilla.
+ */
+export function removeModsvsInContent(content: string): { content: string; changed: boolean } {
+  const segments = splitLines(content);
+  let block: SearchPathsBlock;
+  try {
+    block = locateSearchPaths(segments);
+  } catch {
+    return { content, changed: false };
+  }
+
+  const modsvsIndices: number[] = [];
+  for (let i = block.openIndex + 1; i < block.closeIndex; i++) {
+    const seg = segments[i];
+    if (seg !== undefined && isGameModsvsLine(seg.text)) {
+      modsvsIndices.push(i);
+    }
+  }
+
+  if (modsvsIndices.length === 0) {
+    return { content, changed: false };
+  }
+
+  const modsvsSet = new Set(modsvsIndices);
+  const next = segments.slice();
+  for (let i = next.length - 1; i >= 0; i--) {
+    if (modsvsSet.has(i)) {
+      next.splice(i, 1);
+    }
+  }
+
+  return { content: joinLines(next), changed: true };
+}
+
+/**
  * GameInfoEditor — capa de I/O sobre el núcleo puro {@link ensureModsvsFirstInContent}
  * (DECISIÓN 4). Lee el gameinfo.txt con el {@link GameInfoFileSystem} inyectado,
  * aplica la transformación y ESCRIBE SOLO si hubo cambio (Caso C no toca disco).
@@ -547,5 +582,17 @@ export class GameInfoEditor {
       return { appliedCase: "unchanged", changed: false };
     }
     return { appliedCase: outcome.appliedCase, changed: true };
+  }
+
+  /**
+   * Remueve cualquier referencia a `modsvs` del gameinfo.txt dejándolo en estado original (Vanilla).
+   */
+  async removeModsvs(gameInfoFile: string): Promise<boolean> {
+    const content = await this.#fs.readTextFile(gameInfoFile);
+    const outcome = removeModsvsInContent(content);
+    if (outcome.changed) {
+      await this.#fs.writeTextFile(gameInfoFile, outcome.content);
+    }
+    return outcome.changed;
   }
 }

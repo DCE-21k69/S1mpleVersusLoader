@@ -24,6 +24,8 @@ export const IPC_CHANNELS = {
   applyActiveSet: "activeSet:apply",
   addAddon: "activeSet:add",
   removeAddon: "activeSet:remove",
+  restoreVanilla: "activeSet:restoreVanilla",
+  isGameRunning: "game:isRunning",
   getResumeState: "activeSet:resumeState",
   mergeProgress: "merge:onProgress",
 } as const;
@@ -48,6 +50,8 @@ export interface L4d2Api {
   applyActiveSet(entries: AddonManifestEntry[]): Promise<OperationResult>;
   addAddon(addonId: string, priorityOrder: number): Promise<OperationResult>;
   removeAddon(addonId: string): Promise<OperationResult>;
+  restoreVanilla(): Promise<OperationResult>;
+  isGameRunning(): Promise<boolean>;
   getResumeState(): Promise<ResumeState | null>;
   /** Se suscribe al progreso; devuelve la función de desuscripción. */
   onProgress(listener: (event: MergeProgressEvent) => void): () => void;
