@@ -8,6 +8,7 @@
 
 // ─── Tipos de dominio (resueltos en build-time, no en runtime) ─────────────
 import type { AddonManifestEntry, ScannedAddon, UpdateInfo } from "../main/domain/index.js";
+import type { L4d2Api } from "../main/app/ipc-contract.js";
 
 // ─── Llave de persistencia del tema ────────────────────────────────────────
 const THEME_KEY = "s1mple-theme";
@@ -62,8 +63,24 @@ if (!toastContainer) {
   document.body.appendChild(toastContainer);
 }
 
-// ─── API del backend ───────────────────────────────────────────────────────
-const api = window.l4d2Api;
+// ─── API del backend (Proxy dinámico tolerante a inicialización) ───────────
+async function waitForBridge(): Promise<void> {
+  for (let i = 0; i < 60; i++) {
+    if ((window as unknown as { l4d2Api?: unknown }).l4d2Api) return;
+    await new Promise((r) => setTimeout(r, 50));
+  }
+}
+
+const api = new Proxy({} as L4d2Api, {
+  get(_target, prop) {
+    const bridge = (window as unknown as { l4d2Api?: Record<string, unknown> }).l4d2Api;
+    if (!bridge || !(prop in bridge)) {
+      throw new Error(`l4d2Api bridge no está listo para '${String(prop)}'`);
+    }
+    const val = bridge[prop as string];
+    return typeof val === "function" ? val.bind(bridge) : val;
+  },
+});
 
 // =============================================================================
 // TEMA (Dark / Light)
@@ -378,6 +395,14 @@ function showUpdateModal(info: UpdateInfo): void {
 // =============================================================================
 async function initApp(): Promise<void> {
   loadTheme();
+  showLoadingState("Detectando Steam y Left 4 Dead 2...");
+
+  try {
+    await waitForBridge();
+  } catch (err) {
+    showErrorState(String(err));
+    return;
+  }
 
   // 0. Verificación de Actualización Obligatoria (Forced Updater)
   try {
