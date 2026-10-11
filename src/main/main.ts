@@ -36,9 +36,11 @@ import { createProgressBroadcaster, registerIpcHandlers } from "./app/ipc-handle
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function bootstrap(): Promise<void> {
-  const { app, BrowserWindow: BrowserWindowCtor, dialog, ipcMain } = await import(
+  const { app, BrowserWindow: BrowserWindowCtor, dialog, ipcMain, Menu } = await import(
     "electron"
   );
+
+  Menu.setApplicationMenu(null);
 
   await app.whenReady();
 
@@ -87,12 +89,20 @@ async function bootstrap(): Promise<void> {
       minWidth: 640,
       minHeight: 480,
       title: "S1mple Versus Loader",
+      autoHideMenuBar: true,
       backgroundColor: "#111114",
       webPreferences: {
         contextIsolation: true,
         nodeIntegration: false,
-        preload: path.join(__dirname, "../preload/preload.js"),
+        preload: path.join(__dirname, "../preload/preload.cjs"),
       },
+    });
+
+    mainWindow.setMenuBarVisibility(false);
+    mainWindow.removeMenu();
+
+    mainWindow.webContents.on("console-message", (_event, level, message, line, sourceId) => {
+      console.log(`[Renderer L${level}] (${sourceId}:${line}): ${message}`);
     });
 
     void mainWindow.loadFile(

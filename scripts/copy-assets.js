@@ -14,6 +14,15 @@ for (const file of ["index.html", "style.css"]) {
   }
 }
 
+// Copiar preload.cjs
+const preloadSrc = path.resolve("src/preload/preload.cjs");
+const preloadDistDir = path.resolve("dist/src/preload");
+fs.mkdirSync(preloadDistDir, { recursive: true });
+if (fs.existsSync(preloadSrc)) {
+  fs.copyFileSync(preloadSrc, path.join(preloadDistDir, "preload.cjs"));
+  console.log("[copy-assets] Copiado preload.cjs -> dist/src/preload/");
+}
+
 // Asegurar permisos de ejecutable para los binarios y scripts en resources/bin
 for (const binPath of ["resources/bin/linux/vpk", "resources/bin/vpk-cli.cjs"]) {
   const full = path.resolve(binPath);
