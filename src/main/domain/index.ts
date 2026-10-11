@@ -226,7 +226,7 @@ export type { BackupFileSystem } from "./backup-manager.js";
 // el error tipado y el núcleo puro (ensureModsvsFirstInContent) para testearlo
 // sin disco (Property 12, tarea 13.2). El orquestador (tarea 18) lo consume.
 // ---------------------------------------------------------------------------
-export { GameInfoEditor, GameInfoEditError, ensureModsvsFirstInContent } from "./game-info-editor.js";
+export { GameInfoEditor, GameInfoEditError, ensureModsvsFirstInContent, removeModsvsInContent } from "./game-info-editor.js";
 export type {
   GameInfoFileSystem,
   GameInfoEditOutcome,
