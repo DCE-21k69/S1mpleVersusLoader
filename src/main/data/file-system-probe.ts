@@ -16,6 +16,17 @@ export class RealFileSystemProbe implements FileSystemProbe {
   }
 
   async exists(target: string): Promise<boolean> {
+    const cleanTarget = process.platform === "win32" ? target : target.replace(/\\/g, "/");
+    if (cleanTarget.toLowerCase().endsWith("modsvs") || cleanTarget.toLowerCase().endsWith("modsvs/")) {
+      const parent = cleanTarget.replace(/[\\/]modsvs[\\/]?$/i, "");
+      if ((await pathExists(parent)) && !(await pathExists(cleanTarget))) {
+        try {
+          await fs.mkdir(cleanTarget, { recursive: true });
+        } catch {
+          // Si no se puede crear por permisos, pathExists retornará su estado actual
+        }
+      }
+    }
     return pathExists(target);
   }
 }

@@ -130,18 +130,28 @@ export class ChildProcessCommandRunner implements CommandRunner {
     return new Promise<CommandResult>((resolve, reject) => {
       // `execFile` acepta un array de args y NO usa shell (shell: false por
       // defecto): los args llegan literalmente al proceso, sin quoting de shell.
+      let fileToExec = executable;
+      let finalArgs = [...args];
+
+      // Si el ejecutable es un script JS/CJS, lanzarlo con el runtime actual (Node / Electron)
+      if (executable.endsWith(".cjs") || executable.endsWith(".js")) {
+        fileToExec = process.execPath;
+        finalArgs = [executable, ...args];
+      }
+
       execFile(
-        executable,
-        // Copia defensiva a array mutable: `execFile` tipa `args` como
-        // `readonly string[] | null | undefined`, pero preferimos pasar un
-        // array propio y no la referencia readonly del llamador.
-        [...args],
+        fileToExec,
+        finalArgs,
         {
           encoding: "utf8",
           maxBuffer: this.#maxBuffer,
           // `cwd` solo se incluye si el llamador lo proveyó (bajo
           // exactOptionalPropertyTypes no se asigna `undefined` explícito).
           ...(options?.cwd !== undefined ? { cwd: options.cwd } : {}),
+          env: {
+            ...process.env,
+            ELECTRON_RUN_AS_NODE: "1",
+          },
         },
         (error: ExecFileError | null, stdout: string, stderr: string) => {
           if (error === null) {

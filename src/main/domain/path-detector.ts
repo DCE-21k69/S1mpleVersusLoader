@@ -338,6 +338,37 @@ export class PathDetector {
           paths.gameRoot + "\\bin\\vpk_linux32",
           paths.gameRoot + "\\bin\\vpk",
         ];
+
+        // Añadir candidatos de la herramienta VPK empaquetada (bundled)
+        const cwd = typeof process !== "undefined" && process.cwd ? process.cwd() : "";
+        const resourcesPath =
+          typeof process !== "undefined" && (process as unknown as { resourcesPath?: string }).resourcesPath
+            ? (process as unknown as { resourcesPath?: string }).resourcesPath
+            : "";
+
+        if (resourcesPath) {
+          altCandidates.push(
+            resourcesPath + "/bin/linux/vpk",
+            resourcesPath + "/bin/vpk-cli.cjs",
+            resourcesPath + "\\bin\\win32\\vpk.cmd",
+            resourcesPath + "\\bin\\vpk-cli.cjs",
+          );
+        }
+        if (cwd) {
+          altCandidates.push(
+            cwd + "/resources/bin/linux/vpk",
+            cwd + "/resources/bin/vpk-cli.cjs",
+            cwd + "\\resources\\bin\\win32\\vpk.cmd",
+            cwd + "\\resources\\bin\\vpk-cli.cjs",
+          );
+        }
+        altCandidates.push(
+          "resources/bin/linux/vpk",
+          "resources/bin/vpk-cli.cjs",
+          "resources\\bin\\win32\\vpk.cmd",
+          "resources\\bin\\vpk-cli.cjs",
+        );
+
         for (const alt of altCandidates) {
           if (await this.#fs.exists(alt)) {
             (paths as { vpkToolPath: string }).vpkToolPath = alt;

@@ -147,4 +147,58 @@ describe("Bundled VPK Tool (Fase 1)", () => {
     // Cleanup
     fs.rmSync(tempDir, { recursive: true, force: true });
   });
+
+  test("ChildProcessCommandRunner executes bundled .cjs through VpkTool", async () => {
+    const { VpkTool } = await import("../src/main/domain/vpk-tool.js");
+    const { ChildProcessCommandRunner } = await import("../src/main/data/child-process-command-runner.js");
+
+    const runner = new ChildProcessCommandRunner();
+    const tool = new VpkTool(runner, CLI_PATH);
+
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "vpk-runner-cjs-"));
+    const sourceDir = path.join(tempDir, "runner_mod");
+    fs.mkdirSync(sourceDir, { recursive: true });
+    fs.writeFileSync(path.join(sourceDir, "addoninfo.txt"), "Test VpkTool with CJS", "utf8");
+
+    const vpkPath = await tool.pack(sourceDir, "addon-1");
+    expect(fs.existsSync(vpkPath)).toBe(true);
+
+    const list = await tool.list(vpkPath, "addon-1");
+    expect(list).toEqual(["addoninfo.txt"]);
+
+    const extractDir = path.join(tempDir, "out");
+    fs.mkdirSync(extractDir, { recursive: true });
+    await tool.extract(vpkPath, list, extractDir, "addon-1");
+    expect(fs.readFileSync(path.join(extractDir, "addoninfo.txt"), "utf8")).toBe("Test VpkTool with CJS");
+
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  test("PathDetector resolves bundled VPK tool fallback when vpk.exe is missing", async () => {
+    const { PathDetector } = await import("../src/main/domain/path-detector.js");
+    const { RealFileSystemProbe } = await import("../src/main/data/file-system-probe.js");
+
+    const realFs = new RealFileSystemProbe();
+    const detector = new PathDetector({
+      registry: { readValue: async () => null },
+      fs: realFs,
+      manual: { requestPath: async () => ({ kind: "cancelled" }) },
+    });
+
+    const dummyPaths = {
+      steamPath: "/dummy/steam",
+      gameRoot: "/dummy/steam/steamapps/common/Left 4 Dead 2",
+      left4dead2Dir: "/dummy/steam/steamapps/common/Left 4 Dead 2/left4dead2",
+      workshopFolder: "/dummy/steam/steamapps/common/Left 4 Dead 2/left4dead2/addons/workshop",
+      vpkToolPath: "/dummy/steam/steamapps/common/Left 4 Dead 2/bin/vpk.exe", // missing on disk
+      gameInfoFile: "/dummy/steam/steamapps/common/Left 4 Dead 2/left4dead2/gameinfo.txt",
+      modsvsFolder: "/dummy/steam/steamapps/common/Left 4 Dead 2/left4dead2/modsvs",
+    };
+
+    const verification = await detector.verifyPathsOnDisk(dummyPaths);
+    // Because bundled VPK tool exists on disk in the project, vpkToolPath is found and resolved!
+    expect(verification.present.vpkToolPath).toBe(true);
+    expect(dummyPaths.vpkToolPath.includes("vpk")).toBe(true);
+  });
 });
+
