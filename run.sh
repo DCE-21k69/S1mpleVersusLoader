@@ -18,6 +18,9 @@ echo "=========================================================="
 if [ -d "$HOME/.local/node/bin" ]; then
   export PATH="$HOME/.local/node/bin:$PATH"
 fi
+if [ -d "$HOME/.gemini/antigravity/bin" ]; then
+  export PATH="$HOME/.gemini/antigravity/bin:$PATH"
+fi
 
 # Verificar Node.js
 if ! command -v node >/dev/null 2>&1; then
