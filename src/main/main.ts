@@ -82,18 +82,23 @@ async function bootstrap(): Promise<void> {
 
   const createWindow = (): void => {
     mainWindow = new BrowserWindowCtor({
-      width: 1024,
-      height: 720,
+      width: 860,
+      height: 620,
+      minWidth: 640,
+      minHeight: 480,
+      title: "S1mple Versus Loader",
+      backgroundColor: "#111114",
       webPreferences: {
         contextIsolation: true,
         nodeIntegration: false,
         preload: path.join(__dirname, "../preload/preload.js"),
       },
     });
-    // Placeholder: la UI del renderer se construye en la Tarea 21.
-    void mainWindow.loadURL(
-      "data:text/html,<h1>L4D2 Versus Addon Manager</h1><p>Andamiaje inicial.</p>",
+
+    void mainWindow.loadFile(
+      path.join(__dirname, "../renderer/index.html"),
     );
+
     mainWindow.on("closed", () => {
       mainWindow = null;
     });

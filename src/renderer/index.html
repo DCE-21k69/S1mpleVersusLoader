@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>S1mple Versus Loader</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="dark">
+
+  <!-- ========== HEADER ========== -->
+  <header id="app-header">
+    <div id="header-left">
+      <span id="app-title">S1mple Versus Loader</span>
+      <span id="header-badge" class="badge-hidden"></span>
+    </div>
+    <div id="header-right">
+      <div id="game-guard" class="guard-hidden">
+        <span class="guard-icon">⚠️</span>
+        <span class="guard-text">Left 4 Dead 2 está abierto. Cerralo para aplicar cambios.</span>
+      </div>
+      <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">🌙</button>
+    </div>
+  </header>
+
+  <!-- ========== STATUS BAR ========== -->
+  <div id="status-bar">
+    <span id="status-active">0 mods activos</span>
+    <span class="status-sep">|</span>
+    <span id="status-inactive">0 mods inactivos</span>
+    <span class="status-sep">|</span>
+    <span id="status-total">Cargando lista...</span>
+  </div>
+
+  <!-- ========== PROGRESS BAR ========== -->
+  <div id="progress-container" class="progress-hidden">
+    <div id="progress-label">Preparando...</div>
+    <div id="progress-track">
+      <div id="progress-bar"></div>
+    </div>
+  </div>
+
+  <!-- ========== ADDON LIST ========== -->
+  <main id="addon-list-container">
+    <div id="loading-state">
+      <div class="spinner"></div>
+      <span>Detectando Steam y Left 4 Dead 2...</span>
+    </div>
+    <div id="error-state" class="hidden">
+      <span class="error-icon">💀</span>
+      <p id="error-message">Error desconocido.</p>
+      <button id="retry-btn" class="btn-secondary">Reintentar</button>
+    </div>
+    <ul id="addon-list" class="hidden"></ul>
+  </main>
+
+  <!-- ========== ACTION BUTTONS ========== -->
+  <footer id="actions">
+    <div id="footer-brand">Hecho: DCE Studios For EITO Comunity</div>
+    <div id="footer-buttons">
+      <button id="btn-vanilla" class="btn-secondary" disabled>🧹 Dejar Left Full Vanilla</button>
+      <button id="btn-apply" class="btn-primary" disabled>🔥 Activar Mods en Versus</button>
+    </div>
+  </footer>
+
+  <script src="renderer.js" type="module"></script>
+</body>
+</html>

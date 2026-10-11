@@ -1,0 +1,468 @@
+/* ============================================================
+   S1mple Versus Loader — Stylesheet
+   Dos temas: .dark (default) y .light
+   ============================================================ */
+
+/* ---- Reset y base ---- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --radius: 8px;
+  --radius-sm: 5px;
+  --transition: 0.18s ease;
+  --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Consolas', 'Courier New', monospace;
+}
+
+/* =========== TEMA OSCURO (default) =========== */
+body.dark {
+  --bg:            #111114;
+  --bg-surface:    #1a1a1f;
+  --bg-hover:      #24242b;
+  --bg-active:     #1e1e26;
+  --border:        #2e2e38;
+  --text:          #e0e0ea;
+  --text-muted:    #8888a0;
+  --accent:        #e05c2a;
+  --accent-hover:  #f06e3a;
+  --accent-light:  rgba(224, 92, 42, 0.12);
+  --btn-sec:       #2c2c36;
+  --btn-sec-hover: #38383f;
+  --btn-sec-text:  #c0c0d0;
+  --guard-bg:      rgba(220, 60, 60, 0.15);
+  --guard-border:  rgba(220, 60, 60, 0.40);
+  --guard-text:    #ff7070;
+  --check-border:  #555565;
+  --scrollbar:     #2a2a35;
+  --scrollbar-th:  #444455;
+  --badge-bg:      #1e6a2e;
+  --badge-text:    #7edc90;
+  --error-icon:    #ff6060;
+}
+
+/* =========== TEMA CLARO =========== */
+body.light {
+  --bg:            #f0f0f4;
+  --bg-surface:    #ffffff;
+  --bg-hover:      #e8e8f0;
+  --bg-active:     #e0e8f8;
+  --border:        #d0d0dc;
+  --text:          #1a1a28;
+  --text-muted:    #6060808;
+  --accent:        #c94a18;
+  --accent-hover:  #dd5522;
+  --accent-light:  rgba(201, 74, 24, 0.10);
+  --btn-sec:       #e0e0ea;
+  --btn-sec-hover: #d0d0dc;
+  --btn-sec-text:  #333345;
+  --guard-bg:      rgba(200, 40, 40, 0.10);
+  --guard-border:  rgba(200, 40, 40, 0.35);
+  --guard-text:    #c02020;
+  --check-border:  #aaaabc;
+  --scrollbar:     #d8d8e4;
+  --scrollbar-th:  #b0b0c0;
+  --badge-bg:      #d0f0d8;
+  --badge-text:    #2a7a3a;
+  --error-icon:    #cc3333;
+}
+
+/* ---- Scroll ---- */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--scrollbar); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-th); border-radius: 4px; }
+
+/* ---- Layout principal ---- */
+html, body {
+  height: 100%;
+  font-family: var(--font);
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text);
+  transition: background var(--transition), color var(--transition);
+  user-select: none;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ========== HEADER ========== */
+#app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+#header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+#app-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.badge-hidden { display: none; }
+
+#header-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--badge-bg);
+  color: var(--badge-text);
+  white-space: nowrap;
+}
+
+#header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Guard de proceso */
+.guard-hidden { display: none !important; }
+
+#game-guard {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--guard-bg);
+  border: 1px solid var(--guard-border);
+  color: var(--guard-text);
+  font-size: 12px;
+  font-weight: 500;
+  animation: pulse-guard 2s infinite;
+}
+
+@keyframes pulse-guard {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+/* Botón de tema */
+#theme-toggle {
+  background: var(--btn-sec);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 16px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition), border-color var(--transition);
+  flex-shrink: 0;
+}
+#theme-toggle:hover { background: var(--btn-sec-hover); }
+
+/* ========== STATUS BAR ========== */
+#status-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+#status-active { color: var(--accent); font-weight: 600; }
+.status-sep { color: var(--border); }
+
+/* ========== PROGRESS BAR ========== */
+.progress-hidden { display: none !important; }
+
+#progress-container {
+  padding: 8px 16px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+#progress-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+#progress-track {
+  height: 5px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+#progress-bar {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+/* Animación indeterminada */
+#progress-bar.indeterminate {
+  width: 35% !important;
+  animation: indeterminate 1.4s ease-in-out infinite;
+}
+
+@keyframes indeterminate {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+/* ========== MAIN — LISTA DE ADDONS ========== */
+#addon-list-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+/* Estados especiales */
+#loading-state, #error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 14px;
+  padding: 32px;
+  text-align: center;
+}
+
+.error-icon { font-size: 40px; }
+#error-message { max-width: 360px; line-height: 1.5; }
+
+.hidden { display: none !important; }
+
+/* Spinner */
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Lista */
+#addon-list {
+  list-style: none;
+  padding: 0 8px;
+}
+
+/* Fila de addon */
+.addon-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition);
+  border-bottom: 1px solid transparent;
+}
+
+.addon-item:hover { background: var(--bg-hover); }
+.addon-item.is-active {
+  background: var(--accent-light);
+  border-bottom-color: var(--border);
+}
+
+/* Checkbox personalizado */
+.addon-check {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.addon-check input[type="checkbox"] {
+  opacity: 0;
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  margin: 0;
+}
+
+.addon-check-box {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--check-border);
+  border-radius: 4px;
+  background: var(--bg-surface);
+  transition: border-color var(--transition), background var(--transition);
+  pointer-events: none;
+}
+
+.addon-check input[type="checkbox"]:checked + .addon-check-box {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.addon-check input[type="checkbox"]:checked + .addon-check-box::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 0px;
+  width: 5px;
+  height: 9px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+/* Info del addon */
+.addon-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.addon-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+}
+
+.addon-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Badge VScript */
+.addon-vscript-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: rgba(220, 180, 40, 0.15);
+  color: #cca040;
+  border: 1px solid rgba(220, 180, 40, 0.30);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ========== FOOTER / ACCIONES ========== */
+#actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+#footer-brand {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+#footer-buttons {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Botones principales */
+.btn-primary, .btn-secondary {
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), opacity var(--transition), transform 0.08s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+.btn-primary:active:not(:disabled) { transform: scale(0.97); }
+
+.btn-secondary {
+  background: var(--btn-sec);
+  color: var(--btn-sec-text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover:not(:disabled) { background: var(--btn-sec-hover); }
+.btn-secondary:active:not(:disabled) { transform: scale(0.97); }
+
+button:disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+}
+
+/* ========== TOAST ========== */
+#toast-container {
+  position: fixed;
+  bottom: 70px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.toast {
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  max-width: 360px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+  animation: slide-up 0.25s ease;
+  pointer-events: all;
+}
+.toast.success { background: #1a4d2a; color: #7edc90; border: 1px solid #2e6e40; }
+.toast.error   { background: #4d1a1a; color: #ff8080; border: 1px solid #8e3030; }
+.toast.info    { background: var(--bg-surface); color: var(--text); border: 1px solid var(--border); }
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
