@@ -134,6 +134,7 @@ import type { MergeEngine } from "./merge-engine.js";
 import type { ProcessGuard } from "./process-guard.js";
 import type { LocalStore } from "./local-store.js";
 import type { AddonScanner } from "./addon-scanner.js";
+import { mergeVpksFast } from "./vpk-fast-engine.js";
 import type {
   AddonManifestEntry,
   ElevationOutcome,
@@ -490,11 +491,32 @@ export class MergeOrchestrator {
       let mergedVpkPath: string;
       this.#emit("merge");
       try {
-        const merged = await this.#merge.merge(orderedAddons, this.#paths, workDir);
-        mergedVpkPath = merged.vpkPath;
-        mergeReport = merged.report;
-      } catch (err) {
-        return this.#failureFromError(err);
+        const targetTmpVpk = joinWindowsPath(workDir, INSTALLED_VPK_NAME);
+        const fastResult = await mergeVpksFast(
+          orderedAddons.map((a) => ({ id: a.id, vpkPath: a.vpkPath })),
+          targetTmpVpk,
+        );
+
+        if (fastResult.success) {
+          mergedVpkPath = targetTmpVpk;
+          mergeReport = {
+            totalFiles: fastResult.totalFiles,
+            collisions: [],
+            vpkSize: fastResult.sizeBytes,
+          };
+        } else {
+          const merged = await this.#merge.merge(orderedAddons, this.#paths, workDir);
+          mergedVpkPath = merged.vpkPath;
+          mergeReport = merged.report;
+        }
+      } catch {
+        try {
+          const merged = await this.#merge.merge(orderedAddons, this.#paths, workDir);
+          mergedVpkPath = merged.vpkPath;
+          mergeReport = merged.report;
+        } catch (err) {
+          return this.#failureFromError(err);
+        }
       }
 
       // Paso 6 — Instalar: copiar el .vpk fusionado a modsvs/ (escritura en

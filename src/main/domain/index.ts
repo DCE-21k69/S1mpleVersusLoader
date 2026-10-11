@@ -312,3 +312,16 @@ export type {
 export { UpdateService, isNewerVersion } from "./update-service.js";
 export type { UpdateInfo, GitHubReleaseResponse, ReleaseAsset } from "./update-service.js";
 
+// ---------------------------------------------------------------------------
+// Motor Nativo Ultrarrápido VPK (sin vpk.exe)
+// ---------------------------------------------------------------------------
+export {
+  VPK_MAGIC,
+  readVpkHeader,
+  parseVpkEntries,
+  hasVscriptsFast,
+  readAddonInfoFast,
+  mergeVpksFast,
+} from "./vpk-fast-engine.js";
+export type { VpkFileEntry, VpkHeader } from "./vpk-fast-engine.js";
+
