@@ -6,8 +6,9 @@ import { pathExists } from "./node-fs-helpers.js";
 /** FileSystemProbe real (Tarea 20.4, bloque 1): consumida por PathDetector (Sección 5). */
 export class RealFileSystemProbe implements FileSystemProbe {
   async readTextFile(target: string): Promise<FileReadResult> {
+    const cleanTarget = process.platform === "win32" ? target : target.replace(/\\/g, "/");
     try {
-      const content = await fs.readFile(target, "utf8");
+      const content = await fs.readFile(cleanTarget, "utf8");
       return { ok: true, content };
     } catch {
       return { ok: false };

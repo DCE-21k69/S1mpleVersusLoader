@@ -143,7 +143,9 @@ export class RealElevationOsProvider implements ElevationOsProvider {
   }
 
   async probeWrite(dir: string): Promise<boolean> {
-    const probePath = dir + "\\.l4d2-write-probe-" + Date.now().toString();
+    const cleanDir = process.platform === "win32" ? dir : dir.replace(/\\/g, "/");
+    const sep = process.platform === "win32" ? "\\" : "/";
+    const probePath = cleanDir + sep + ".l4d2-write-probe-" + Date.now().toString();
     const fs = await import("node:fs/promises");
     try {
       await fs.writeFile(probePath, "");

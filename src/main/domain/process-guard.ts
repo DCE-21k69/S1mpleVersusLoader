@@ -110,8 +110,13 @@ export class ProcessGuard {
    */
   async isGameRunning(): Promise<boolean> {
     const names = await this.#provider.listRunningProcessNames();
-    return names.some(
-      (name) => basename(name).toLowerCase() === GAME_PROCESS_NAME,
-    );
+    return names.some((name) => {
+      const base = basename(name).toLowerCase();
+      return (
+        base === GAME_PROCESS_NAME ||
+        base === "hl2_linux" ||
+        base === "left4dead2"
+      );
+    });
   }
 }

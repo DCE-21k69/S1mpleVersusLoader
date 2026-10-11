@@ -274,10 +274,27 @@ export class PathDetector {
       STEAM_REGISTRY_KEY,
       STEAM_REGISTRY_VALUE,
     );
-    if (value === null || value.trim() === "") {
-      return null;
+    if (value !== null && value.trim() !== "") {
+      return value;
     }
-    return value;
+
+    // Rutas estándar de Steam en Linux / SteamOS / Steam Deck si el registro no dio resultado
+    const home = process.env["HOME"] ?? "";
+    if (home) {
+      const candidates = [
+        `${home}/.local/share/Steam`,
+        `${home}/.steam/steam`,
+        `${home}/.steam/root`,
+        `${home}/.var/app/com.valvesoftware.Steam/.local/share/Steam`,
+      ];
+      for (const cand of candidates) {
+        if (await this.#fs.exists(cand)) {
+          return cand;
+        }
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -312,7 +329,23 @@ export class PathDetector {
     const present = {} as Record<RequiredPathKey, boolean>;
     const missing: RequiredPathKey[] = [];
     for (const key of REQUIRED_PATH_KEYS) {
-      const exists = await this.#fs.exists(paths[key]);
+      let exists = await this.#fs.exists(paths[key]);
+      if (key === "vpkToolPath" && !exists) {
+        // En Linux, buscar ejecutables nativos alternativos: bin/vpk_linux32 o bin/vpk
+        const altCandidates = [
+          paths.gameRoot + "/bin/vpk_linux32",
+          paths.gameRoot + "/bin/vpk",
+          paths.gameRoot + "\\bin\\vpk_linux32",
+          paths.gameRoot + "\\bin\\vpk",
+        ];
+        for (const alt of altCandidates) {
+          if (await this.#fs.exists(alt)) {
+            (paths as { vpkToolPath: string }).vpkToolPath = alt;
+            exists = true;
+            break;
+          }
+        }
+      }
       present[key] = exists;
       if (!exists) {
         missing.push(key);

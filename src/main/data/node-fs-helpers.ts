@@ -12,15 +12,21 @@
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
 
+/** Normaliza rutas con backslash en sistemas POSIX (Linux/Steam Deck/macOS). */
+function toPlatformPath(p: string): string {
+  if (process.platform === "win32") return p;
+  return p.replace(/\\/g, "/");
+}
+
 /** Crea un directorio de forma recursiva e idempotente (no lanza si ya existe). */
 export async function ensureDir(dir: string): Promise<void> {
-  await fs.mkdir(dir, { recursive: true });
+  await fs.mkdir(toPlatformPath(dir), { recursive: true });
 }
 
 /** `true`/`false` según exista la ruta; NUNCA lanza (ENOENT y similares -> false). */
 export async function pathExists(target: string): Promise<boolean> {
   try {
-    await fs.access(target);
+    await fs.access(toPlatformPath(target));
     return true;
   } catch {
     return false;
@@ -33,12 +39,12 @@ export async function pathExists(target: string): Promise<boolean> {
  * — idéntico en ambos, a diferencia de FileSystemProbe.readTextFile, que NO lanza).
  */
 export async function readTextFileOrThrow(target: string): Promise<string> {
-  return fs.readFile(target, "utf8");
+  return fs.readFile(toPlatformPath(target), "utf8");
 }
 
 /** Sobrescribe (o crea) un archivo de texto UTF-8. */
 export async function writeTextFile(target: string, content: string): Promise<void> {
-  await fs.writeFile(target, content, "utf8");
+  await fs.writeFile(toPlatformPath(target), content, "utf8");
 }
 
 /**
@@ -49,7 +55,7 @@ export async function writeTextFile(target: string, content: string): Promise<vo
  * para que el manejo REACTIVO de EACCES/EPERM lo capture y eleve).
  */
 export async function copyFileOverwrite(source: string, dest: string): Promise<void> {
-  await fs.copyFile(source, dest);
+  await fs.copyFile(toPlatformPath(source), toPlatformPath(dest));
 }
 
 /**
@@ -59,7 +65,7 @@ export async function copyFileOverwrite(source: string, dest: string): Promise<v
  * elevación por igual).
  */
 export async function removeDirRecursive(dir: string): Promise<void> {
-  await fs.rm(dir, { recursive: true, force: true });
+  await fs.rm(toPlatformPath(dir), { recursive: true, force: true });
 }
 
 /** Entrada de directorio de NIVEL SUPERIOR (no recursivo): nombre + si es carpeta. */
@@ -70,7 +76,7 @@ export interface FsDirEntry {
 
 /** Lista las entradas de NIVEL SUPERIOR de `dir` (no recursivo). Contrato de AddonFileSystem.listEntries. */
 export async function listTopLevelEntries(dir: string): Promise<FsDirEntry[]> {
-  const entries = await fs.readdir(dir, { withFileTypes: true });
+  const entries = await fs.readdir(toPlatformPath(dir), { withFileTypes: true });
   return entries.map((entry) => ({
     name: entry.name,
     isDirectory: entry.isDirectory(),
@@ -89,6 +95,7 @@ export interface FsWalkedFile {
  * vpk-path.ts). Contrato de CollisionFileSystem.walk.
  */
 export async function walkRecursive(rootDir: string): Promise<FsWalkedFile[]> {
+  const cleanRoot = toPlatformPath(rootDir);
   const results: FsWalkedFile[] = [];
   async function recurse(currentDir: string): Promise<void> {
     const entries = await fs.readdir(currentDir, { withFileTypes: true });
@@ -97,11 +104,11 @@ export async function walkRecursive(rootDir: string): Promise<FsWalkedFile[]> {
       if (entry.isDirectory()) {
         await recurse(fullPath);
       } else {
-        const relative = path.relative(rootDir, fullPath).split(path.sep).join("/");
+        const relative = path.relative(cleanRoot, fullPath).split(path.sep).join("/");
         results.push({ relativePath: relative });
       }
     }
   }
-  await recurse(rootDir);
+  await recurse(cleanRoot);
   return results;
 }

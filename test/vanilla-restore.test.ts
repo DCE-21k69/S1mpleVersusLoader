@@ -133,7 +133,9 @@ describe("Fase 3: Seguridad, Carpeta Oculta y Restauración Vanilla", () => {
 
       const res = await orchestrator.restoreVanilla();
       expect(res.status).toBe("failure");
-      expect(res.error).toContain("ejecución");
+      if (res.status === "failure") {
+        expect(res.error).toContain("ejecución");
+      }
     });
 
     it("elimina la carpeta modsvs, remueve el SearchPath y limpia el manifest", async () => {
@@ -171,11 +173,11 @@ describe("Fase 3: Seguridad, Carpeta Oculta y Restauración Vanilla", () => {
       const mockPaths: GamePaths = {
         steamPath: "C:\\Steam",
         gameRoot: "C:\\L4D2",
-        gameFolder: "C:\\L4D2\\left4dead2",
+        left4dead2Dir: "C:\\L4D2\\left4dead2",
         gameInfoFile: "C:\\L4D2\\left4dead2\\gameinfo.txt",
         modsvsFolder: "C:\\L4D2\\left4dead2\\modsvs",
         workshopFolder: "C:\\L4D2\\left4dead2\\addons\\workshop",
-        vpkToolExe: "C:\\L4D2\\bin\\vpk.exe",
+        vpkToolPath: "C:\\L4D2\\bin\\vpk.exe",
       };
 
       const orchestrator = new MergeOrchestrator({

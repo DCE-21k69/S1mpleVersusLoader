@@ -31,10 +31,25 @@ export class RealProcessListProvider implements ProcessListProvider {
   }
 
   async listRunningProcessNames(): Promise<string[]> {
-    const result = await this.#runner.run("tasklist", ["/fo", "csv", "/nh"]);
-    if (result.exitCode !== 0) {
-      throw new Error("tasklist terminó con código " + result.exitCode + ": " + result.stderr);
+    if (process.platform === "win32") {
+      const result = await this.#runner.run("tasklist", ["/fo", "csv", "/nh"]);
+      if (result.exitCode !== 0) {
+        throw new Error("tasklist terminó con código " + result.exitCode + ": " + result.stderr);
+      }
+      return parseTasklistCsv(result.stdout);
+    } else {
+      try {
+        const result = await this.#runner.run("ps", ["-A", "-o", "comm="]);
+        if (result.exitCode === 0) {
+          return result.stdout
+            .split(/\r?\n/)
+            .map((s) => s.trim())
+            .filter(Boolean);
+        }
+      } catch {
+        // best-effort
+      }
+      return [];
     }
-    return parseTasklistCsv(result.stdout);
   }
 }
