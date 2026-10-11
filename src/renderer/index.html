@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' mod-cover: file: data:; style-src 'self' 'unsafe-inline'; script-src 'self';" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>S1mple Versus Loader</title>
   <link rel="stylesheet" href="style.css" />
@@ -31,6 +31,22 @@
     <span id="status-inactive">0 mods inactivos</span>
     <span class="status-sep">|</span>
     <span id="status-total">Cargando lista...</span>
+  </div>
+
+  <!-- ========== SEARCH BAR ========== -->
+  <div id="search-container">
+    <div id="search-box">
+      <span class="search-icon" aria-hidden="true">🔍</span>
+      <input
+        type="search"
+        id="search-input"
+        placeholder="Buscar mods por nombre, autor o ID..."
+        aria-label="Buscar mods"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button id="search-clear" class="search-clear hidden" title="Limpiar búsqueda" aria-label="Limpiar búsqueda">✕</button>
+    </div>
   </div>
 
   <!-- ========== PROGRESS BAR ========== -->

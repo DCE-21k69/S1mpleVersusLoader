@@ -20,7 +20,7 @@
 import { spawnSync } from "node:child_process";
 import * as os from "node:os";
 import * as path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import Database from "better-sqlite3";
 import type { BrowserWindow } from "electron";
@@ -36,13 +36,42 @@ import { createProgressBroadcaster, registerIpcHandlers } from "./app/ipc-handle
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function bootstrap(): Promise<void> {
-  const { app, BrowserWindow: BrowserWindowCtor, dialog, ipcMain, Menu } = await import(
+  const { app, BrowserWindow: BrowserWindowCtor, dialog, ipcMain, Menu, protocol, net } = await import(
     "electron"
   );
+
+  protocol.registerSchemesAsPrivileged([
+    {
+      scheme: "mod-cover",
+      privileges: {
+        standard: true,
+        secure: true,
+        supportFetchAPI: true,
+        corsEnabled: true,
+      },
+    },
+  ]);
 
   Menu.setApplicationMenu(null);
 
   await app.whenReady();
+
+  protocol.handle("mod-cover", (request) => {
+    try {
+      const url = new URL(request.url);
+      const rawPath = url.searchParams.get("path") || url.pathname;
+      let filePath = decodeURIComponent(rawPath);
+      // Strip leading slashes from Windows drive letter if present (e.g. /C:/ -> C:/)
+      if (process.platform === "win32") {
+        filePath = filePath.replace(/^[/\\]+([A-Za-z]:)/, "$1");
+      } else {
+        filePath = filePath.replace(/\\/g, "/");
+      }
+      return net.fetch(pathToFileURL(filePath).toString());
+    } catch {
+      return new Response("Not found", { status: 404 });
+    }
+  });
 
   const db = new Database(path.join(app.getPath("userData"), "store.sqlite"));
   app.on("before-quit", () => db.close());

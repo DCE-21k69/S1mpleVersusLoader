@@ -21,6 +21,7 @@ interface AppState {
   activeManifest: AddonManifestEntry[];
   gameRunning: boolean;
   busy: boolean;
+  searchQuery: string;
 }
 
 const state: AppState = {
@@ -29,6 +30,7 @@ const state: AppState = {
   activeManifest: [],
   gameRunning: false,
   busy: false,
+  searchQuery: "",
 };
 
 // ─── Elementos del DOM ─────────────────────────────────────────────────────
@@ -39,6 +41,8 @@ const headerBadge       = document.getElementById("header-badge")!;
 const statusActive      = document.getElementById("status-active")!;
 const statusInactive    = document.getElementById("status-inactive")!;
 const statusTotal       = document.getElementById("status-total")!;
+const searchInput       = document.getElementById("search-input") as HTMLInputElement;
+const searchClear       = document.getElementById("search-clear") as HTMLButtonElement;
 const progressContainer = document.getElementById("progress-container")!;
 const progressBar       = document.getElementById("progress-bar")!;
 const progressLabel     = document.getElementById("progress-label")!;
@@ -155,14 +159,19 @@ function hideProgress(): void {
 // =============================================================================
 // STATUS BAR
 // =============================================================================
-function updateStatusBar(): void {
+function updateStatusBar(filteredCount?: number): void {
   const totalAddons = state.addons.length;
   const activeCount = state.selected.size;
   const inactiveCount = totalAddons - activeCount;
 
   statusActive.textContent = `${activeCount} ${activeCount === 1 ? "mod activo" : "mods activos"}`;
   statusInactive.textContent = `${inactiveCount} ${inactiveCount === 1 ? "mod inactivo" : "mods inactivos"}`;
-  statusTotal.textContent = `${totalAddons} en total`;
+
+  if (state.searchQuery.trim().length > 0 && filteredCount !== undefined) {
+    statusTotal.textContent = `Mostrando ${filteredCount} de ${totalAddons} mods`;
+  } else {
+    statusTotal.textContent = `${totalAddons} en total`;
+  }
 }
 
 function updateHeaderBadge(): void {
@@ -211,22 +220,76 @@ function setBusy(busy: boolean): void {
 }
 
 // =============================================================================
-// RENDER DE LISTA DE ADDONS
+// RENDER DE LISTA DE ADDONS Y MINIATURAS
 // =============================================================================
+const PLACEHOLDER_COVER =
+  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect width="64" height="64" rx="8" fill="%2324242c"/><path d="M20 22h24a2 2 0 0 1 2 2v20a2 2 0 0 1-2 2H20a2 2 0 0 1-2-2V24a2 2 0 0 1 2-2zm2 4v16h20V26H22zm4 3h12v2H26v-2zm0 4h8v2h-8v-2z" fill="%23e05c2a" opacity="0.85"/></svg>';
+
+function getCoverUrl(coverPath: string | null): string {
+  if (!coverPath) return PLACEHOLDER_COVER;
+  return `mod-cover://cover/?path=${encodeURIComponent(coverPath)}`;
+}
+
 function renderAddonList(): void {
   addonListEl.innerHTML = "";
 
   if (state.addons.length === 0) {
     loadingState.classList.remove("hidden");
+    loadingState.className = "";
     loadingState.innerHTML = `<span style="font-size:32px">📦</span><span>No se encontraron addons en la Workshop.<br>Suscríbete a algunos en Steam y reinicia la app.</span>`;
+    updateStatusBar();
     return;
   }
 
-  // Ordenar: activos primero, luego por nombre
-  const sorted = [...state.addons].sort((a, b) => {
-    const aActive = state.selected.has(a.id) ? 0 : 1;
-    const bActive = state.selected.has(b.id) ? 0 : 1;
-    if (aActive !== bActive) return aActive - bActive;
+  // Filtrar según state.searchQuery (en tiempo real)
+  const q = state.searchQuery.trim().toLowerCase();
+  const filtered = state.addons.filter((addon) => {
+    if (!q) return true;
+    const title = (addon.info?.title ?? "").toLowerCase();
+    const author = (addon.info?.author ?? "").toLowerCase();
+    const id = addon.id.toLowerCase();
+    const desc = (addon.info?.description ?? "").toLowerCase();
+    return title.includes(q) || author.includes(q) || id.includes(q) || desc.includes(q);
+  });
+
+  console.log(`[Renderer] Renderizando ${filtered.length} de ${state.addons.length} mods (filtro: "${state.searchQuery}")`);
+  updateStatusBar(filtered.length);
+
+  // Si la búsqueda no arrojó resultados
+  if (filtered.length === 0) {
+    loadingState.classList.remove("hidden");
+    loadingState.className = "empty-search-state";
+    loadingState.innerHTML = `
+      <span style="font-size:32px">🔍</span>
+      <p>No se encontraron mods que coincidan con "<strong>${escapeHtml(state.searchQuery)}</strong>"</p>
+      <button id="btn-clear-search-empty" class="btn-secondary">Limpiar búsqueda</button>
+    `;
+    const btnClear = document.getElementById("btn-clear-search-empty");
+    if (btnClear) {
+      btnClear.addEventListener("click", () => {
+        state.searchQuery = "";
+        searchInput.value = "";
+        searchClear.classList.add("hidden");
+        searchInput.focus();
+        renderAddonList();
+      });
+    }
+    return;
+  }
+
+  loadingState.classList.add("hidden");
+  loadingState.className = "";
+
+  // Ordenar: activos primero (por prioridad de selección), luego por título alfabético
+  const sorted = [...filtered].sort((a, b) => {
+    const aPriority = state.selected.get(a.id);
+    const bPriority = state.selected.get(b.id);
+    if (aPriority !== undefined && bPriority !== undefined) {
+      return aPriority - bPriority;
+    }
+    if (aPriority !== undefined) return -1;
+    if (bPriority !== undefined) return 1;
+
     const aName = a.info?.title ?? a.id;
     const bName = b.info?.title ?? b.id;
     return aName.localeCompare(bName);
@@ -234,8 +297,10 @@ function renderAddonList(): void {
 
   for (const addon of sorted) {
     const isActive = state.selected.has(addon.id);
-    const title = addon.info?.title ?? `Workshop ${addon.id}`;
-    const authorLabel = addon.info?.author ? ` · por ${addon.info.author}` : "";
+    const priority = state.selected.get(addon.id);
+    const title = addon.info?.title || `Workshop ${addon.id}`;
+    const authorLabel = addon.info?.author ? `por ${addon.info.author} · ` : "";
+    const coverUrl = getCoverUrl(addon.coverPath);
 
     const li = document.createElement("li");
     li.className = `addon-item${isActive ? " is-active" : ""}`;
@@ -246,11 +311,22 @@ function renderAddonList(): void {
         <input type="checkbox" ${isActive ? "checked" : ""} />
         <span class="addon-check-box"></span>
       </label>
+      <div class="addon-thumb-wrapper">
+        <img class="addon-thumb" src="${coverUrl}" alt="" loading="lazy" />
+      </div>
       <div class="addon-info">
         <span class="addon-name" title="${escapeHtml(title)}">${escapeHtml(title)}</span>
-        <span class="addon-meta">${escapeHtml(addon.id + authorLabel)}</span>
+        <span class="addon-meta" title="${escapeHtml(addon.id)}">${escapeHtml(authorLabel)}<span class="addon-id-tag">ID: ${escapeHtml(addon.id)}</span></span>
       </div>
+      ${isActive && priority !== undefined ? `<span class="addon-priority-badge" title="Prioridad de carga: #${priority}">#${priority}</span>` : ""}
     `;
+
+    const img = li.querySelector<HTMLImageElement>(".addon-thumb");
+    if (img) {
+      img.addEventListener("error", () => {
+        img.src = PLACEHOLDER_COVER;
+      }, { once: true });
+    }
 
     const checkbox = li.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
     checkbox.addEventListener("change", () => toggleAddon(addon.id, checkbox.checked));
@@ -277,13 +353,49 @@ function toggleAddon(id: string, checked: boolean): void {
     }
   }
   renderAddonList();
-  updateStatusBar();
   refreshButtons();
 }
 
 function escapeHtml(str: string): string {
   return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
+
+// ─── Eventos del Buscador de Mods ──────────────────────────────────────────
+searchInput.addEventListener("input", () => {
+  state.searchQuery = searchInput.value;
+  if (state.searchQuery.length > 0) {
+    searchClear.classList.remove("hidden");
+  } else {
+    searchClear.classList.add("hidden");
+  }
+  renderAddonList();
+});
+
+searchClear.addEventListener("click", () => {
+  state.searchQuery = "";
+  searchInput.value = "";
+  searchClear.classList.add("hidden");
+  searchInput.focus();
+  renderAddonList();
+});
+
+searchInput.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    state.searchQuery = "";
+    searchInput.value = "";
+    searchClear.classList.add("hidden");
+    searchInput.blur();
+    renderAddonList();
+  }
+});
+
+window.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
+    e.preventDefault();
+    searchInput.focus();
+    searchInput.select();
+  }
+});
 
 // =============================================================================
 // APLICAR MODS

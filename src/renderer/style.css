@@ -193,6 +193,81 @@ body {
 #status-active { color: var(--accent); font-weight: 600; }
 .status-sep { color: var(--border); }
 
+/* ========== SEARCH BAR ========== */
+#search-container {
+  padding: 8px 16px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+#search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  left: 11px;
+  font-size: 13px;
+  color: var(--text-muted);
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+#search-input {
+  width: 100%;
+  height: 34px;
+  padding: 0 32px 0 34px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+#search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+#search-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.75;
+}
+
+#search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  display: none;
+}
+
+.search-clear {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px;
+  line-height: 1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition), background var(--transition);
+}
+
+.search-clear:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+
 /* ========== PROGRESS BAR ========== */
 .progress-hidden { display: none !important; }
 
@@ -243,7 +318,7 @@ body {
 }
 
 /* Estados especiales */
-#loading-state, #error-state {
+#loading-state, #error-state, .empty-search-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -254,6 +329,17 @@ body {
   font-size: 14px;
   padding: 32px;
   text-align: center;
+}
+
+.empty-search-state {
+  height: 220px;
+}
+.empty-search-state p {
+  max-width: 380px;
+  line-height: 1.5;
+}
+.empty-search-state strong {
+  color: var(--text);
 }
 
 .error-icon { font-size: 40px; }
@@ -283,11 +369,12 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: background var(--transition);
   border-bottom: 1px solid transparent;
+  user-select: none;
 }
 
 .addon-item:hover { background: var(--bg-hover); }
@@ -339,18 +426,39 @@ body {
   transform: rotate(45deg);
 }
 
+/* Thumbnail */
+.addon-thumb-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.addon-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 /* Info del addon */
 .addon-info {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .addon-name {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -360,7 +468,25 @@ body {
 .addon-meta {
   font-size: 11px;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.addon-meta .addon-id-tag {
   font-family: var(--font-mono);
+  opacity: 0.8;
+}
+
+/* Badge de prioridad */
+.addon-priority-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: var(--accent);
+  color: #fff;
+  flex-shrink: 0;
 }
 
 /* Badge VScript */
