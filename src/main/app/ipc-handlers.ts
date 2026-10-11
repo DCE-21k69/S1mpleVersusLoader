@@ -12,6 +12,7 @@ import type { IpcMain, WebContents } from "electron";
 
 import { IPC_CHANNELS } from "./ipc-contract.js";
 import type { ResumeState } from "./ipc-contract.js";
+import { UpdateService } from "../domain/index.js";
 import type {
   AddonManifestEntry,
   AddonScanner,
@@ -21,7 +22,6 @@ import type {
   PathDetector,
   ProcessGuard,
   ScannedAddon,
-  UpdateService,
   VScriptClassification,
   VScriptDetector,
 } from "../domain/index.js";

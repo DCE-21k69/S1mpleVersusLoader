@@ -1,0 +1,23 @@
+#!/bin/sh
+set -e
+
+# Resolve directory of this script
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+CLI="$SCRIPT_DIR/vpk-cli.cjs"
+
+if command -v node >/dev/null 2>&1; then
+  exec node "$CLI" "$@"
+elif [ -n "$ELECTRON_RUN_AS_NODE" ]; then
+  exec "$0" "$@"
+elif [ -n "$ELECTRON_EXEC_PATH" ] && [ -x "$ELECTRON_EXEC_PATH" ]; then
+  export ELECTRON_RUN_AS_NODE=1
+  exec "$ELECTRON_EXEC_PATH" "$CLI" "$@"
+else
+  for cand in /usr/bin/node /usr/local/bin/node "$HOME/.gemini/antigravity/bin/node"; do
+    if [ -x "$cand" ]; then
+      exec "$cand" "$CLI" "$@"
+    fi
+  done
+  echo "Error: Node.js runtime not found to run vpk-cli" >&2
+  exit 1
+fi
