@@ -305,3 +305,10 @@ export type {
   MergeOrchestratorFileSystem,
   MergeOrchestratorDeps,
 } from "./merge-orchestrator.js";
+
+// ---------------------------------------------------------------------------
+// Sistema de Auto-Actualización Obligatoria (Fase 5)
+// ---------------------------------------------------------------------------
+export { UpdateService, isNewerVersion } from "./update-service.js";
+export type { UpdateInfo, GitHubReleaseResponse, ReleaseAsset } from "./update-service.js";
+

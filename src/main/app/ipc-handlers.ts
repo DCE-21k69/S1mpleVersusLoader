@@ -21,6 +21,7 @@ import type {
   PathDetector,
   ProcessGuard,
   ScannedAddon,
+  UpdateService,
   VScriptClassification,
   VScriptDetector,
 } from "../domain/index.js";
@@ -34,6 +35,7 @@ export interface IpcHandlersDeps {
   /** Instancia YA construida, con `onProgress` ya cableado por la 20.4. */
   mergeOrchestrator: MergeOrchestrator;
   processGuard?: ProcessGuard;
+  updateService?: UpdateService;
   /**
    * Accesor al estado de resume bufferizado (Decisión D2a-i). El buffer y su
    * ciclo de vida son responsabilidad del composition root; acá solo se lee.
@@ -172,6 +174,16 @@ export function registerIpcHandlers(
   ipcMain.handle(IPC_CHANNELS.isGameRunning, async () =>
     deps.processGuard ? deps.processGuard.isGameRunning() : false,
   );
+
+  ipcMain.handle(IPC_CHANNELS.checkForUpdates, async () => {
+    const updater = deps.updateService ?? new UpdateService();
+    return updater.checkForUpdates();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.openExternalUrl, async (_event, url: string) => {
+    const { shell } = await import("electron");
+    await shell.openExternal(url);
+  });
 
   ipcMain.handle(IPC_CHANNELS.getResumeState, () => deps.getResumeState());
 }

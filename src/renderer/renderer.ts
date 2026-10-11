@@ -7,7 +7,7 @@
  */
 
 // ─── Tipos de dominio (resueltos en build-time, no en runtime) ─────────────
-import type { AddonManifestEntry, ScannedAddon } from "../main/domain/index.js";
+import type { AddonManifestEntry, ScannedAddon, UpdateInfo } from "../main/domain/index.js";
 
 // ─── Llave de persistencia del tema ────────────────────────────────────────
 const THEME_KEY = "s1mple-theme";
@@ -48,6 +48,11 @@ const retryBtn          = document.getElementById("retry-btn")!;
 const addonListEl       = document.getElementById("addon-list")!;
 const btnApply          = document.getElementById("btn-apply") as HTMLButtonElement;
 const btnVanilla        = document.getElementById("btn-vanilla") as HTMLButtonElement;
+
+// Modal de Actualización Obligatoria
+const updateModal       = document.getElementById("update-modal")!;
+const updateVersionTag  = document.getElementById("update-version-tag")!;
+const btnUpdateDownload = document.getElementById("btn-update-download") as HTMLButtonElement;
 
 // Contenedor de toasts (lo inyectamos si no existe)
 let toastContainer = document.getElementById("toast-container");
@@ -353,11 +358,37 @@ btnVanilla.addEventListener("click", async () => {
   }
 });
 
+function showUpdateModal(info: UpdateInfo): void {
+  updateVersionTag.textContent = `Versión disponible: ${info.latestVersion}`;
+  updateModal.classList.remove("hidden");
+  btnApply.disabled = true;
+  btnVanilla.disabled = true;
+
+  btnUpdateDownload.addEventListener("click", () => {
+    const targetUrl =
+      info.downloadUrl ??
+      "https://github.com/DCE-21k69/S1mpleVersusLoader/releases/latest";
+    void api.openExternalUrl(targetUrl);
+    showToast("Abriendo enlace de descarga oficial...", "info");
+  });
+}
+
 // =============================================================================
 // CARGA INICIAL
 // =============================================================================
 async function initApp(): Promise<void> {
   loadTheme();
+
+  // 0. Verificación de Actualización Obligatoria (Forced Updater)
+  try {
+    const updateInfo = await api.checkForUpdates();
+    if (updateInfo.updateAvailable) {
+      showUpdateModal(updateInfo);
+      return; // Bloqueo total de la app hasta que actualicen
+    }
+  } catch {
+    // Si falla la red, continuar offline
+  }
 
   // 1. Detectar rutas
   showLoadingState("Detectando Steam y Left 4 Dead 2...");

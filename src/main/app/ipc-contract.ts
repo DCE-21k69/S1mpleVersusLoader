@@ -13,6 +13,7 @@ import type {
   OperationResult,
   PathDetectionResult,
   ScannedAddon,
+  UpdateInfo,
   VScriptClassification,
 } from "../domain/index.js";
 
@@ -26,6 +27,8 @@ export const IPC_CHANNELS = {
   removeAddon: "activeSet:remove",
   restoreVanilla: "activeSet:restoreVanilla",
   isGameRunning: "game:isRunning",
+  checkForUpdates: "app:checkForUpdates",
+  openExternalUrl: "app:openExternalUrl",
   getResumeState: "activeSet:resumeState",
   mergeProgress: "merge:onProgress",
 } as const;
@@ -52,6 +55,8 @@ export interface L4d2Api {
   removeAddon(addonId: string): Promise<OperationResult>;
   restoreVanilla(): Promise<OperationResult>;
   isGameRunning(): Promise<boolean>;
+  checkForUpdates(): Promise<UpdateInfo>;
+  openExternalUrl(url: string): Promise<void>;
   getResumeState(): Promise<ResumeState | null>;
   /** Se suscribe al progreso; devuelve la función de desuscripción. */
   onProgress(listener: (event: MergeProgressEvent) => void): () => void;

@@ -34,6 +34,10 @@ const api: L4d2Api = {
     ipcRenderer.invoke(IPC_CHANNELS.restoreVanilla) as Promise<OperationResult>,
   isGameRunning: () =>
     ipcRenderer.invoke(IPC_CHANNELS.isGameRunning) as Promise<boolean>,
+  checkForUpdates: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.checkForUpdates),
+  openExternalUrl: (url: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.openExternalUrl, url),
   getResumeState: () =>
     ipcRenderer.invoke(IPC_CHANNELS.getResumeState) as Promise<ResumeState | null>,
   onProgress: (listener) => {
